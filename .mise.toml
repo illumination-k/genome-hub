@@ -1,27 +1,76 @@
 [tools]
 dprint = "0.47.2"
-buf = "1.45.0"
+
 shfmt = "3.9.0"
 actionlint = "1.7.3"
 uv = "0.4.24"
+
+# protobuf
+buf = "1.45.0"
+protoc = "28.2"
+
+# web
 node = "22"
+pnpm = "9.12.2"
+
+[tasks.setup_web]
+description = "Setup the web"
+run = "pnpm install"
+dir = "web"
 
 [tasks.setup]
 description = "Setup the project"
-run = "mise i"
+depends = ["setup_web"]
 
-[tasks.fmt]
-description = "Format the project"
+[tasks.fmt_conf]
+description = "Format all configuration files"
 run = [
   "dprint fmt",
-  "shfmt -l -w .",
-  "buf format -w",
+  "shfmt -f $(git ls-files) | xargs shfmt -l -w",
 ]
 
-[tasks.lint]
-description = "Lint the project"
+[tasks.fmt_server]
+description = "Format the server"
+run = "cargo fmt"
+dir = "server"
+
+[tasks.fmt_protos]
+description = "Format the protos"
+run = "buf format -w"
+dir = "protos"
+
+[tasks.fmt_web]
+description = "Format the web"
+run = "pnpm fmt"
+dir = "web"
+
+[tasks.fmt]
+description = "Format all resources"
+depends = ["fmt_conf", "fmt_server", "fmt_protos", "fmt_web"]
+
+[tasks.lint_conf]
+description = "Lint all configuration files"
 run = [
   "dprint check",
   "actionlint",
-  "cd protos && buf lint",
 ]
+
+[tasks.lint_protos]
+description = "Lint the protos"
+run = "buf lint"
+dir = "protos"
+
+[tasks.lint_server]
+description = "Lint the server"
+env = { "RUST_BACKTRACE" = "1" }
+run = ["cargo fmt --all --check", "cargo clippy -- --deny warnings"]
+dir = "server"
+
+[tasks.lint_web]
+description = "Lint the web"
+run = "pnpm lint"
+dir = "web"
+
+[tasks.lint]
+description = "Lint all resources"
+depends = ["lint_conf", "lint_server", "lint_protos", "lint_web"]

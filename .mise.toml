@@ -1,0 +1,27 @@
+[tools]
+dprint = "0.47.2"
+buf = "1.45.0"
+shfmt = "3.9.0"
+actionlint = "1.7.3"
+uv = "0.4.24"
+node = "22"
+
+[tasks.setup]
+description = "Setup the project"
+run = "mise i"
+
+[tasks.fmt]
+description = "Format the project"
+run = [
+  "dprint fmt",
+  "shfmt -l -w .",
+  "buf format -w",
+]
+
+[tasks.lint]
+description = "Lint the project"
+run = [
+  "dprint check",
+  "actionlint",
+  "cd protos && buf lint",
+]
